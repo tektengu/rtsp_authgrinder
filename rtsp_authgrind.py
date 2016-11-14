@@ -105,7 +105,7 @@ def create_test_packet():
     return create_core_packet() + "\r\n"
 	
 def create_basic_packet(user, password):
-    ecreds = base64.b64encode(user + ":" + password)
+    ecreds = str(base64.b64encode(bytes(user + ":" + password, encoding='ascii')))
     setup_pkt = create_core_packet()
     setup_pkt += 'Authorization: Basic ' + ecreds + '\r\n\r\n'
     return setup_pkt
@@ -200,11 +200,11 @@ class AuthThreader(threading.Thread):
     			password = pair[1]
     			#print "doing pair " + user + "," + password
     			pkt = self.creator(user, password)
-    			s.sendall(pkt)
+    			s.sendall(bytes(pkt, encoding='ascii'))
     			#print 'Packet: ' + pkt
     			#print 'Packet sent'
     			inputready, outputready, exceptready = select.select([s], [], [], 5)
-    			data = s.recv(1024)
+    			data = str(s.recv(1024))
     			#print data
     			if is_Authorized(data):
     				print("Found one")
@@ -248,7 +248,7 @@ def test_auth_and_run():
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		s.settimeout(5)
 		s.connect((IP, PORT))
-		s.sendall(pkt)
+		s.sendall(bytes(pkt, encoding='ascii'))
 		data = s.recv(1024)
 	except KeyboardInterrupt :
 		print("The run was interrupted by the user pressing Ctl-C")
